@@ -9,9 +9,9 @@
 // Constantes do jogo
 #define TAMANHO_TABULEIRO 10
 #define AGUA 0
-#define NAVIO 1
+#define NAVIO 3  // Alterado para 3 conforme requisito
 
-// Funcao para inicializar o tabuleiro com agua
+// Função para inicializar o tabuleiro com água
 void inicializarTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
     for (int i = 0; i < TAMANHO_TABULEIRO; i++) {
         for (int j = 0; j < TAMANHO_TABULEIRO; j++) {
@@ -20,45 +20,75 @@ void inicializarTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
     }
 }
 
-// Funcao para validar as coordenadas do navio
-int validarCoordenadas(int x, int y, int tamanho, int horizontal, int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
-    if (horizontal) {
-        if (x < 0 || x >= TAMANHO_TABULEIRO || y < 0 || y + tamanho > TAMANHO_TABULEIRO) {
-            return 0;
-        }
-    } else {
-        if (x < 0 || x + tamanho > TAMANHO_TABULEIRO || y < 0 || y >= TAMANHO_TABULEIRO) {
-            return 0;
-        }
+// Função para validar as coordenadas do navio
+int validarCoordenadas(int x, int y, int tamanho, int tipo, int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
+    int dx = 0, dy = 0;
+    
+    // Define a direção do navio
+    switch(tipo) {
+        case 0: // Horizontal
+            dy = 1;
+            break;
+        case 1: // Vertical
+            dx = 1;
+            break;
+        case 2: // Diagonal para baixo
+            dx = 1;
+            dy = 1;
+            break;
+        case 3: // Diagonal para cima
+            dx = -1;
+            dy = 1;
+            break;
     }
 
+    // Verifica limites do tabuleiro
     for (int i = 0; i < tamanho; i++) {
-        if (horizontal) {
-            if (tabuleiro[x][y + i] == NAVIO) {
-                return 0;
-            }
-        } else {
-            if (tabuleiro[x + i][y] == NAVIO) {
-                return 0;
-            }
+        int newX = x + (dx * i);
+        int newY = y + (dy * i);
+        
+        if (newX < 0 || newX >= TAMANHO_TABULEIRO || newY < 0 || newY >= TAMANHO_TABULEIRO) {
+            return 0;
+        }
+        
+        // Verifica sobreposição
+        if (tabuleiro[newX][newY] == NAVIO) {
+            return 0;
         }
     }
 
     return 1;
 }
 
-// Funcao para posicionar um navio no tabuleiro
-void posicionarNavio(int x, int y, int tamanho, int horizontal, int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
+// Função para posicionar um navio no tabuleiro
+void posicionarNavio(int x, int y, int tamanho, int tipo, int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
+    int dx = 0, dy = 0;
+    
+    // Define a direção do navio
+    switch(tipo) {
+        case 0: // Horizontal
+            dy = 1;
+            break;
+        case 1: // Vertical
+            dx = 1;
+            break;
+        case 2: // Diagonal para baixo
+            dx = 1;
+            dy = 1;
+            break;
+        case 3: // Diagonal para cima
+            dx = -1;
+            dy = 1;
+            break;
+    }
+
+    // Posiciona o navio
     for (int i = 0; i < tamanho; i++) {
-        if (horizontal) {
-            tabuleiro[x][y + i] = NAVIO;
-        } else {
-            tabuleiro[x + i][y] = NAVIO;
-        }
+        tabuleiro[x + (dx * i)][y + (dy * i)] = NAVIO;
     }
 }
 
-// Funcao para exibir o tabuleiro
+// Função para exibir o tabuleiro
 void exibirTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
     printf("\nTabuleiro atual:\n");
     printf("   ");
@@ -70,7 +100,7 @@ void exibirTabuleiro(int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO]) {
     for (int i = 0; i < TAMANHO_TABULEIRO; i++) {
         printf("%2d ", i);
         for (int j = 0; j < TAMANHO_TABULEIRO; j++) {
-            printf("%c ", tabuleiro[i][j] == AGUA ? '~' : 'N');
+            printf("%d ", tabuleiro[i][j]);
         }
         printf("\n");
     }
@@ -83,23 +113,27 @@ int main() {
     int tabuleiro[TAMANHO_TABULEIRO][TAMANHO_TABULEIRO];
     inicializarTabuleiro(tabuleiro);
 
-    // Definindo as coordenadas dos navios (tamanho 3)
-    int navio1_x = 1, navio1_y = 2;  // Vertical
-    int navio2_x = 3, navio2_y = 0;  // Horizontal
+    // Definindo as coordenadas dos navios
+    struct {
+        int x, y, tamanho, tipo;
+        const char* direcao;
+    } navios[] = {
+        {1, 1, 3, 0, "horizontal"},    // Navio 1 - horizontal na parte superior
+        {4, 7, 3, 1, "vertical"},      // Navio 2 - vertical na parte direita
+        {2, 4, 3, 2, "diagonal"},      // Navio 3 - diagonal para baixo no centro
+        {6, 2, 3, 3, "diagonal"}       // Navio 4 - diagonal para cima na parte inferior
+    };
 
-    // Posicionando os navios apos validacao
-    if (validarCoordenadas(navio1_x, navio1_y, 3, 0, tabuleiro)) {
-        posicionarNavio(navio1_x, navio1_y, 3, 0, tabuleiro);
-        printf("Navio vertical posicionado nas coordenadas (%d,%d)\n", navio1_x, navio1_y);
-    } else {
-        printf("Erro: Nao foi possivel posicionar o navio vertical nas coordenadas (%d,%d)\n", navio1_x, navio1_y);
-    }
-
-    if (validarCoordenadas(navio2_x, navio2_y, 3, 1, tabuleiro)) {
-        posicionarNavio(navio2_x, navio2_y, 3, 1, tabuleiro);
-        printf("Navio horizontal posicionado nas coordenadas (%d,%d)\n", navio2_x, navio2_y);
-    } else {
-        printf("Erro: Nao foi possivel posicionar o navio horizontal nas coordenadas (%d,%d)\n", navio2_x, navio2_y);
+    // Posicionando os navios
+    for (int i = 0; i < 4; i++) {
+        if (validarCoordenadas(navios[i].x, navios[i].y, navios[i].tamanho, navios[i].tipo, tabuleiro)) {
+            posicionarNavio(navios[i].x, navios[i].y, navios[i].tamanho, navios[i].tipo, tabuleiro);
+            printf("Navio %s posicionado nas coordenadas (%d,%d)\n", 
+                   navios[i].direcao, navios[i].x, navios[i].y);
+        } else {
+            printf("Erro: Nao foi possivel posicionar o navio %s nas coordenadas (%d,%d)\n", 
+                   navios[i].direcao, navios[i].x, navios[i].y);
+        }
     }
 
     // Exibindo o tabuleiro final
